@@ -3,33 +3,37 @@ import { Database } from "bun:sqlite";
 const db = new Database("db/db.sqlite");
 
 db.run(`
-    CREATE TABLE IF NOT EXISTS categories (
+    CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        description TEXT
-    )
-`)
-
-db.run(`
-    CREATE TABLE IF NOT EXISTS products (
-        id INTEGER PRIMARY KEY AUTOINCREMENT , 
-        name TEXT NOT NULL, 
         price REAL NOT NULL,
-        stock_quantity INTEGER NOT NULL,
-        category_id INTEGER,
-        FOREIGN KEY (category_id) REFERENCES categories(id)
-        )
+        stock_quantity INTEGER NOT NULL
+    )
 `);
 
-function addProduct(name: string, price: number, stock_quantity: number, category_id: number) {
+function addProduct(name: string, price: number, stock_quantity: number) {
     const stmt = db.prepare(`
-    INSERT INTO products (name, price, stock_quantity, category_id)
-    VALUES (?, ?, ?, ?)
+        INSERT INTO products (name, price, stock_quantity)
+        VALUES (?, ?, ?)
     `);
 
-    const result = stmt.run(name, price, stock_quantity, category_id);
+    const result = stmt.run(name, price, stock_quantity);
     console.log(`Product added with ID: ${result.lastInsertRowid}`);
-    
 }
 
-addProduct('Laptop', 999.99, 5, 1);
+function removeProduct(id: number) {
+    const stmt = db.prepare(`DELETE FROM products WHERE id = ?`);
+    const result = stmt.run(id);
+    
+    if (result.changes > 0) {
+        console.log(`Product with ID ${id} removed`);
+    } else {
+        console.log(`No product found with ID ${id}`);
+    }
+}
+
+addProduct("lappytappy", 999.99, 5);
+addProduct("chooha(mouse)", 29.99, 20);
+addProduct("keyboard", 79.99, 15);
+
+removeProduct(2);
