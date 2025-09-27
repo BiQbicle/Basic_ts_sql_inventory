@@ -32,6 +32,55 @@ function removeProduct(id: number) {
     }
 }
 
+function searchProducts() {
+    const searchTerm = prompt("Enter product name or ID to search: ") || "";
+    const stmt = db.prepare(`
+        SELECT * FROM products 
+        WHERE name LIKE ? OR id = ?
+    `);
+    
+    const results = stmt.all(`%${searchTerm}%`, parseInt(searchTerm) || -1);
+    
+    if (results.length === 0) {
+        console.log("No products found.");
+    } else {
+        console.log("\n--- Search Results ---");
+        results.forEach((product: any) => {
+            console.log(`ID: ${product.id} | Name: ${product.name} | Price: $${product.price} | Stock: ${product.stock_quantity}`);
+        });
+    }
+}
+
+function updateProduct() {
+    const id = parseInt(prompt("Enter product ID to update: ") || "0");
+    
+    const checkStmt = db.prepare(`SELECT * FROM products WHERE id = ?`);
+    const existing = checkStmt.get(id);
+    
+    if (!existing) {
+        console.log(`No product found with ID ${id}`);
+        return;
+    }
+    
+    const newName = prompt("Enter new name: ");
+    const newPrice = parseFloat(prompt("Enter new price: ") || "0");
+    const newStock = parseInt(prompt("Enter new stock quantity: ") || "0");
+    
+    const updateStmt = db.prepare(`
+        UPDATE products 
+        SET name = ?, price = ?, stock_quantity = ? 
+        WHERE id = ?
+    `);
+    
+    const result = updateStmt.run(newName, newPrice, newStock, id);
+    
+    if (result.changes > 0) {
+        console.log(`Product with ID ${id} updated`);
+    } else {
+        console.log(`Failed to update product with ID ${id}`);
+    }
+}
+
 function inputAddProduct() {
     const name = prompt("Enter product name: ");
     const price = parseFloat(prompt("Enter price: ") || "0");
@@ -65,19 +114,19 @@ function mainMenu() {
                 inputAddProduct();
                 break;
             case "2":
-                console.log("SEARCH FEATURE COMING SOON BOAHHHHHH >:]");
+                searchProducts();
                 break;
             case "3":
-                console.log("UPDAITE FEATURE COMING SOON BOAHHHHHH >:]");
+                updateProduct();
                 break;
             case "4":
                 inputRemoveProduct();
                 break;
             case "5":
-                console.log("byeeeeee 😘");
+                console.log("byeeeee 😘");
                 process.exit(0);
             default:
-                console.log("Invalid option retard. choose 1-5.");
+                console.log("wrong option retard. pwease choose 1-5.");
         }
     }
 }
